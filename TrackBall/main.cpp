@@ -48,8 +48,6 @@ int main (int argc, char * const argv[])
     Mat blurredImg;
     Mat temp;
 
-    int dilation_size = 1;
-
     for(;;)
     {
         // Capture image
