@@ -51,7 +51,13 @@ int main (int argc, char * const argv[])
     for(;;)
     {
         // Capture image
-        capture >> img;
+        bool res = capture.grab();
+        if( !( capture.grab() && capture.retrieve( img ) ) )
+        {
+            cerr << "timeout" << endl;
+            waitKey( 50 );
+            continue;
+        }
 
         // convert to hsv
         cvtColor( img, hsvImg, CV_BGR2HSV );
@@ -72,6 +78,32 @@ int main (int argc, char * const argv[])
         dilateImg.copyTo( temp );
         findContours( temp, contours, hierarchy, CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE );
         drawContours( img, contours, -1, Scalar( 255, 0, 0, 255 ) );
+
+        // Get the bounding box of the most likely contour:
+        //  1 - bounding box more or less square (0.8 < width/heigh ratio < 1.2 )
+        //  2 - likely area:
+        //
+        int largerTarget = 0;
+        int largerIndex = -1;
+        for( unsigned i = 0; i < contours.size(); ++i )
+        {
+            Rect rect = boundingRect( contours[i] );
+            int maxSide = rect.width > rect.height ? rect.width : rect.height;
+            double ratio = (double)rect.width / rect.height;
+            if( maxSide > 5 && maxSide < 150 && ratio > 0.8 && ratio < 1.2 )
+            {
+                if( maxSide > largerTarget )
+                {
+                    largerTarget = maxSide;
+                    largerIndex = i;
+                }
+            }
+
+            //RotatedRect rect = minAreaRect( contours[i] );
+        }
+
+        if( largerIndex != -1 )
+            rectangle( img, boundingRect( contours[ largerIndex ] ), Scalar( 255, 255, 0, 0 ) );
 
         /*// Blur image
         GaussianBlur( dilateImg, blurredImg, Size(9, 9), 2, 2 );
@@ -94,7 +126,7 @@ int main (int argc, char * const argv[])
         imshow( "TrackBall-processed", dilateImg );
 
         // Capture keyboard
-        char code = (char)waitKey( 100 );
+        char code = (char)waitKey( 50 );
         if( code == 27 || code == 'q' || code == 'Q' )
             break;
     }
