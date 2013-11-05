@@ -7,9 +7,6 @@
 using namespace cv;
 using namespace std;
 
-Scalar hsv_min = cvScalar( 150, 84, 130, 0 );
-Scalar hsv_max = cvScalar( 358, 256, 255, 0 );
-
 int hsvMin[4] = { 150, 84, 130, 0 };
 int hsvMax[4] = { 358, 256, 255, 0 };
 
